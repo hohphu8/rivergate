@@ -1,0 +1,19 @@
+{
+  "version": "0.5.1",
+  "afterType": {
+    "input": "typed",
+    "signal": "initial"
+  },
+  "afterReset": {
+    "input": "typed",
+    "signal": "reset"
+  },
+  "fixedType": {
+    "input": "typed",
+    "signal": "typed"
+  },
+  "fixedReset": {
+    "input": "reset",
+    "signal": "reset"
+  }
+}
