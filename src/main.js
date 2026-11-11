@@ -383,13 +383,6 @@ Gyos.scope("Rivergate", () => {
         }[modal()] || ""
       );
     },
-    // Accessor preserves the original signal across g-model writes in 0.5.1.
-    get recordText() {
-      return importText();
-    },
-    set recordText(value) {
-      importText(value);
-    },
     select,
     key,
     seek,

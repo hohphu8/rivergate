@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="en">
-  <meta charset="utf-8" /><title>GyosJS 0.5.1 signal/model reproduction</title>
+  <meta charset="utf-8" /><title>GyosJS signal/model regression check</title>
   <main g-scope="Repro">
-    <h1>Signal metadata lost through a reactive scope</h1>
+    <h1>Signal in a reactive scope: fixed in 0.5.2</h1>
     <p>
       1. Type into either input. 2. Press its reset button. Compare the input
-      and the signal readout.
+      and the signal readout. Both should stay synchronized on 0.5.2.
     </p>
     <label
-      >Direct signal (0.5.1 issue)<input id="direct" g-model="text"
+      >Direct signal (fixed in 0.5.2)<input id="direct" g-model="text"
     /></label>
     <p>Signal value: <output id="value">{text()}</output></p>
     <button @click="reset()">Reset direct signal</button>

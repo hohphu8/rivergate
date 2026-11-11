@@ -1,6 +1,6 @@
 # Rivergate · Cờ tướng qua sông
 
-A standalone Vietnamese Xiangqi app built with **GyosJS 0.5.1**, plain HTML/CSS/JavaScript and Vite. Play Red against a basic bot, or play both sides with a friend on one device. No backend, accounts, telemetry or external runtime assets.
+A standalone Vietnamese Xiangqi app built with **GyosJS 0.5.2**, plain HTML/CSS/JavaScript and Vite. Play Red against a basic bot, or play both sides with a friend on one device. No backend, accounts, telemetry or external runtime assets.
 
 ## Run locally
 

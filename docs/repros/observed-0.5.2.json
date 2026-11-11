@@ -1,0 +1,18 @@
+{
+  "version": "0.5.2",
+  "source": "published npm package, no alias or HTML transformation",
+  "browser": "157.0.8103.39",
+  "observations": [
+    {
+      "input": "#direct",
+      "typed": "typed",
+      "reset": "reset"
+    },
+    {
+      "input": "#accessor",
+      "typed": "typed",
+      "reset": "reset"
+    }
+  ],
+  "pageErrors": []
+}
