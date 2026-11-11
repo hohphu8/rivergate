@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f4efe5" />
+    <meta
+      name="description"
+      content="Rivergate — một bàn cờ tướng, một khoảng thảnh thơi. Chơi cùng bot hoặc một người bạn, lưu và xem lại từng nước đi."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Rivergate — Cờ tướng qua sông</title>
+  </head>
+  <body>
+    <noscript
+      >Rivergate cần JavaScript để hiển thị bàn cờ và kiểm tra nước
+      đi.</noscript
+    >
+    <div id="app" g-scope="Rivergate" g-cloak>
+      <header class="header">
+        <a class="brand" href="./" aria-label="Rivergate, trang chủ"
+          ><span class="seal" aria-hidden="true">河</span> rivergate<span
+            class="brand-dot"
+            >.</span
+          ></a
+        >
+        <span class="header-caption">MỘT BÀN CỜ. MỘT KHOẢNG THẢNH THƠI.</span>
+        <button class="help-button" @click="open('help')">
+          <span aria-hidden="true">?</span> Cách chơi
+        </button>
+      </header>
+      <main>
+        <div class="intro">
+          <div>
+            <p class="eyebrow">CỜ TƯỚNG QUA SÔNG</p>
+            <h1>
+              Mỗi nước đi,<br class="mobile-break" />
+              một điều <em>để nghĩ.</em>
+            </h1>
+          </div>
+          <p class="intro-note">
+            Không đồng hồ. Không vội.<br />Chỉ bạn và nước cờ tiếp theo.
+          </p>
+        </div>
+        <div class="game-layout">
+          <section class="play-area" aria-label="Bàn cờ tướng">
+            <div class="opponent">
+              <span
+                :class="flipped() ? 'player-token red-token' : 'player-token black-token'"
+                >{flipped() ? '帥' : '將'}</span
+              >
+              <div>
+                <strong>{playerName(true)}</strong><span>{playerDetail()}</span>
+              </div>
+              <span class="player-side">{flipped() ? 'ĐỎ' : 'ĐEN'}</span>
+            </div>
+            <div class="board-status" aria-hidden="true">
+              <span>{status()}</span><span>Lượt {view()}</span>
+            </div>
+            <div class="board-frame">
+              <div
+                class="board"
+                role="group"
+                aria-label="Bàn cờ 9 cột, 10 hàng"
+                aria-describedby="board-hint"
+                :class="flipped() ? 'board flipped' : 'board'"
+              >
+                <svg
+                  class="board-art"
+                  viewBox="0 0 900 1000"
+                  aria-hidden="true"
+                >
+                  <g fill="none" stroke="currentColor" stroke-width="1.7">
+                    <path stroke-width="3" d="M50 50H850V950H50Z" />
+                    <path
+                      d="M50 150H850M50 250H850M50 350H850M50 450H850M50 550H850M50 650H850M50 750H850M50 850H850M150 50V450M250 50V450M350 50V450M450 50V450M550 50V450M650 50V450M750 50V450M150 550V950M250 550V950M350 550V950M450 550V950M550 550V950M650 550V950M750 550V950M350 50L550 250M550 50L350 250M350 750L550 950M550 750L350 950"
+                    />
+                    <g id="corner-mark">
+                      <path
+                        d="M130 220V230H120M170 220V230H180M130 280V270H120M170 280V270H180"
+                      />
+                    </g>
+                    <use href="#corner-mark" transform="translate(600 0)" />
+                    <use href="#corner-mark" transform="translate(0 500)" />
+                    <use href="#corner-mark" transform="translate(600 500)" />
+                    <use href="#corner-mark" transform="translate(100 100)" />
+                    <use href="#corner-mark" transform="translate(300 100)" />
+                    <use href="#corner-mark" transform="translate(500 100)" />
+                    <use href="#corner-mark" transform="translate(100 400)" />
+                    <use href="#corner-mark" transform="translate(300 400)" />
+                    <use href="#corner-mark" transform="translate(500 400)" />
+                  </g>
+                  <g
+                    class="river-lettering"
+                    text-anchor="middle"
+                    fill="currentColor"
+                  >
+                    <text x="250" y="515">楚 河</text>
+                    <text x="650" y="515">漢 界</text>
+                  </g>
+                </svg>
+                <div class="pieces" aria-hidden="true">
+                  <span
+                    *for="piece in pieces()"
+                    g-key="piece.id"
+                    :class="piece.className"
+                    :style="piece.style"
+                    :data-piece="piece.id"
+                    >{piece.glyph}</span
+                  >
+                </div>
+                <button
+                  *for="cell in cells()"
+                  g-key="cell.at"
+                  :class="cell.className"
+                  :style="cell.style"
+                  :aria-label="cell.label"
+                  :aria-pressed="selected() === cell.at"
+                  :tabindex="cell.tab"
+                  :data-at="cell.at"
+                  @click="select(cell.at)"
+                  @keydown="key($event, cell.at)"
+                ></button>
+              </div>
+              <div class="board-coordinates" aria-hidden="true">
+                <span>{flipped() ? 'i' : 'a'}</span
+                ><span>{flipped() ? 'h' : 'b'}</span
+                ><span>{flipped() ? 'g' : 'c'}</span
+                ><span>{flipped() ? 'f' : 'd'}</span><span>e</span
+                ><span>{flipped() ? 'd' : 'f'}</span
+                ><span>{flipped() ? 'c' : 'g'}</span
+                ><span>{flipped() ? 'b' : 'h'}</span
+                ><span>{flipped() ? 'a' : 'i'}</span>
+              </div>
+            </div>
+            <div class="opponent own-player">
+              <span
+                :class="flipped() ? 'player-token black-token' : 'player-token red-token'"
+                >{flipped() ? '將' : '帥'}</span
+              >
+              <div>
+                <strong>{playerName(false)}</strong><span>{captured()}</span>
+              </div>
+              <span class="player-side">{flipped() ? 'ĐEN' : 'ĐỎ'}</span>
+            </div>
+            <div class="board-tools">
+              <button @click="flip()" :aria-pressed="flipped()">
+                <span aria-hidden="true">⇅</span> Xoay bàn</button
+              ><button @click="toggleLabels()" :aria-pressed="latin()">
+                <span aria-hidden="true">字</span> {labelButton()}</button
+              ><button @click="undo()" :disabled="count() === 0">
+                <span aria-hidden="true">↶</span> Lùi nước
+              </button>
+            </div>
+            <p id="board-hint" class="board-hint">
+              Chạm để chọn và đi · Phím mũi tên để di chuyển, Enter để chọn
+            </p>
+          </section>
+          <aside class="sidebar" aria-label="Điều khiển và lịch sử">
+            <section
+              class="status-card"
+              :class="check() ? 'status-card is-check' : 'status-card'"
+            >
+              <div class="eyebrow">
+                <span
+                  :class="thinking() ? 'status-dot thinking' : 'status-dot'"
+                ></span>
+                {phaseLabel()}
+              </div>
+              <div role="status" aria-live="polite" aria-atomic="true">
+                <h2>{status()}</h2>
+                <p>{detail()}</p>
+              </div>
+              <button
+                class="primary continue"
+                g-show="reviewing()"
+                @click="live()"
+              >
+                Trở lại ván đang chơi <span aria-hidden="true">→</span>
+              </button>
+              <div class="error-box" g-show="botError()" role="alert">
+                <p>{botError()}</p>
+                <button @click="retry()">Thử lại bot</button>
+              </div>
+              <label class="mode-label" for="mode">ĐỐI THỦ</label>
+              <select id="mode" :value="mode()" @change="changeMode($event)">
+                <option value="bot">Chơi với bot · Bạn cầm Đỏ</option>
+                <option value="local">Hai người · Cùng thiết bị</option>
+              </select>
+              <button class="primary new-game" @click="open('new')">
+                <span aria-hidden="true">＋</span> Ván mới
+              </button>
+              <div class="quiet-actions">
+                <button
+                  @click="open('draw')"
+                  :disabled="finished() || reviewing()"
+                >
+                  Hòa ván</button
+                ><span>·</span
+                ><button
+                  @click="open('resign')"
+                  :disabled="finished() || reviewing()"
+                >
+                  Xin thua
+                </button>
+              </div>
+            </section>
+            <section class="history-card" aria-labelledby="history-title">
+              <div class="section-heading">
+                <h2 id="history-title">Dấu chân trên bàn cờ</h2>
+                <span class="move-count" data-testid="move-count"
+                  >{count()}</span
+                >
+              </div>
+              <div class="history-empty" g-show="count() === 0">
+                <span aria-hidden="true">歩</span>
+                <p>Một ván cờ bắt đầu<br />từ một nước đi.</p>
+              </div>
+              <ol class="move-list" g-show="count() > 0">
+                <li *for="move in history()" g-key="move.id">
+                  <button
+                    :class="move.active ? 'move active' : 'move'"
+                    @click="seek(move.id)"
+                    :aria-current="move.active ? 'step' : 'false'"
+                  >
+                    <span class="move-number">{move.number}</span
+                    ><span class="move-side">{move.side}</span
+                    ><strong>{move.label}</strong>
+                  </button>
+                </li>
+              </ol>
+              <div class="replay-tools">
+                <button
+                  @click="seek(0)"
+                  :disabled="count() === 0"
+                  aria-label="Về đầu ván"
+                >
+                  |←</button
+                ><button
+                  @click="seek(view() - 1)"
+                  :disabled="view() === 0"
+                  aria-label="Nước trước"
+                >
+                  ←</button
+                ><button
+                  class="replay-button"
+                  @click="replay()"
+                  :disabled="count() === 0"
+                >
+                  {replaying() ? 'Dừng xem' : 'Xem lại'}</button
+                ><button
+                  @click="seek(view() + 1)"
+                  :disabled="view() === count()"
+                  aria-label="Nước sau"
+                >
+                  →</button
+                ><button
+                  @click="seek(count())"
+                  :disabled="count() === 0"
+                  aria-label="Cuối ván"
+                >
+                  →|
+                </button>
+              </div>
+              <p class="last-notice">{notice()}</p>
+            </section>
+            <section class="save-card" aria-label="Lưu ván">
+              <div class="save-heading">
+                <span aria-hidden="true">↳</span>
+                <p>{saveStatus()}</p>
+              </div>
+              <div class="file-actions">
+                <button @click="exportGame()">Xuất bản ghi ↗</button
+                ><button @click="open('import')">Mở bản ghi</button>
+              </div>
+            </section>
+            <p class="rules-note">
+              Luật phổ thông · Lặp thế 3 lần: hòa.<br />Không phân xử chiếu/đuổi
+              dai theo luật giải.<button @click="open('help')">
+                Đọc luật & giới hạn →
+              </button>
+            </p>
+          </aside>
+        </div>
+      </main>
+      <footer>
+        <span
+          >RIVERGATE <span class="footer-wave" aria-hidden="true">≈</span> CỨ
+          THẢNH THƠI MÀ CHƠI.</span
+        ><span
+          >Built with
+          <a href="https://gyosjs.dev" target="_blank" rel="noopener noreferrer"
+            >GyosJS</a
+          >
+          · 0.5.1</span
+        >
+      </footer>
+      <dialog id="dialog" aria-labelledby="dialog-title">
+        <div class="dialog-top">
+          <span class="eyebrow">RIVERGATE</span
+          ><button
+            class="close-button"
+            @click="close()"
+            aria-label="Đóng hộp thoại"
+          >
+            ×
+          </button>
+        </div>
+        <h2 id="dialog-title">{dialogTitle()}</h2>
+        <div class="help-copy" g-show="modal() === 'help'">
+          <p>
+            Đỏ đi trước. Chọn quân rồi chọn điểm được đánh dấu. Chiếu bí
+            <strong>hoặc khiến đối phương hết nước hợp lệ</strong> là thắng.
+            Không được để tướng bị chiếu hoặc hai tướng nhìn thẳng nhau.
+          </p>
+          <dl>
+            <dt>Tướng · Sĩ</dt>
+            <dd>
+              Ở trong cung 3 × 3. Tướng đi một ô ngang/dọc; Sĩ đi một ô chéo.
+            </dd>
+            <dt>Tượng · Mã</dt>
+            <dd>
+              Tượng đi chéo hai ô, không qua sông và không nhảy qua mắt bị chặn.
+              Mã đi chữ L; bị chặn chân thì không nhảy được.
+            </dd>
+            <dt>Xe · Pháo</dt>
+            <dd>
+              Đi ngang/dọc. Xe không nhảy qua quân; Pháo cần đúng một quân làm
+              ngòi khi bắt quân.
+            </dd>
+            <dt>Tốt</dt>
+            <dd>
+              Tiến một ô. Qua sông được đi ngang; không đi lùi, không phong cấp.
+            </dd>
+          </dl>
+          <h3>Luật hòa của Rivergate</h3>
+          <p>
+            Cùng thế cờ và cùng bên tới lượt xuất hiện
+            <strong>3 lần là hòa</strong>. Hai người có thể đồng ý hòa; trong
+            chế độ bot, bạn có thể kết thúc bằng hòa bất kỳ lúc nào. Ván tự hòa
+            sau 600 lượt đi đơn để giữ bản ghi gọn.
+          </p>
+          <p>
+            Đây là luật chơi phổ thông:
+            <strong>chưa phân xử chiếu/đuổi dai theo luật giải</strong>, không
+            tự xử hòa theo số nước không bắt quân.
+          </p>
+          <h3>Bàn cờ của bạn</h3>
+          <p>
+            Bot cơ bản, bạn cầm Đỏ. “Lùi nước” đưa ván về lượt của bạn; hai
+            người thì lùi một nước. Xem lịch sử không thay đổi ván lưu. Bấm “Trở
+            lại ván đang chơi” để tiếp tục.
+          </p>
+          <p>
+            Dùng mũi tên, Enter/Space để chọn, Escape để bỏ chọn; Home về góc
+            dưới bên trái. Có thể chuyển tên quân sang tiếng Việt và xoay bàn.
+            Trên điện thoại, chạm quân rồi chạm đích.
+          </p>
+          <p>
+            Ván tự lưu trong trình duyệt này. Xuất JSON để chuyển thiết bị; mở
+            bản ghi sẽ thay ván hiện tại. Bot chạy trên thiết bị, không gửi dữ
+            liệu đi.
+          </p>
+        </div>
+        <div g-show="modal() === 'import'" class="import-panel">
+          <p>
+            Mở file Rivergate hoặc dán JSON. Ván hiện tại chỉ được thay khi toàn
+            bộ bản ghi hợp lệ.
+          </p>
+          <label class="file-label"
+            >Chọn file JSON<input
+              type="file"
+              accept=".json,application/json"
+              @change="readFile($event)" /></label
+          ><label for="record-text">Nội dung bản ghi</label
+          ><textarea
+            id="record-text"
+            g-model="recordText"
+            rows="7"
+            spellcheck="false"
+            placeholder='{"rules":"rivergate-casual-v1", ...}'
+          ></textarea>
+          <p class="import-error" role="alert">{importError()}</p>
+          <button class="primary" @click="importGame()">Mở ván này</button>
+        </div>
+        <div
+          g-show="modal() === 'new' || modal() === 'draw' || modal() === 'resign'"
+        >
+          <p>{confirmText()}</p>
+          <div class="confirm-actions">
+            <button @click="close()">Chơi tiếp</button
+            ><button class="primary" @click="confirm()">
+              {confirmLabel()}
+            </button>
+          </div>
+        </div>
+      </dialog>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
