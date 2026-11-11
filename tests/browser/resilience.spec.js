@@ -211,6 +211,31 @@ test("scope teardown cancels Worker, replay and event listeners", async ({
     "Development-only lifecycle inspection hook is excluded from the production build.",
   );
   await controlledWorker(page);
+  await page.addInitScript(() => {
+    window.__lifetimeSignals = [];
+    window.__replayTimers = new Set();
+    const listen = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function (type, handler, options) {
+      if ((type === "cancel" || type === "visibilitychange") && options?.signal)
+        window.__lifetimeSignals.push(options.signal);
+      return listen.call(this, type, handler, options);
+    };
+    const schedule = window.setTimeout.bind(window),
+      cancel = window.clearTimeout.bind(window);
+    window.setTimeout = (handler, delay, ...args) => {
+      if (delay !== 850) return schedule(handler, delay, ...args);
+      const id = schedule(() => {
+        window.__replayTimers.delete(id);
+        handler(...args);
+      }, delay);
+      window.__replayTimers.add(id);
+      return id;
+    };
+    window.clearTimeout = (id) => {
+      window.__replayTimers.delete(id);
+      cancel(id);
+    };
+  });
   await ready(page);
   await move(page);
   await page.evaluate(() => window.__rivergate.dispose());
@@ -224,6 +249,27 @@ test("scope teardown cancels Worker, replay and event listeners", async ({
     window.__workers[0].deliver("result", { move: { from: 27, to: 36 } }),
   );
   await expect(page.getByTestId("move-count")).toHaveText("1");
+  expect(
+    await page.evaluate(() => window.__lifetimeSignals.length),
+  ).toBeGreaterThanOrEqual(2);
+  expect(
+    await page.evaluate(() =>
+      window.__lifetimeSignals.every((signal) => signal.aborted),
+    ),
+  ).toBe(true);
+  await page.reload();
+  await expect(page.locator(".piece")).toHaveCount(32);
+  await page.locator("#mode").selectOption("local");
+  await move(page, 27, 36);
+  await page.getByRole("button", { name: "Xem lại", exact: true }).click();
+  expect(await page.evaluate(() => window.__replayTimers.size)).toBe(1);
+  await page.evaluate(() => window.__rivergate.dispose());
+  expect(await page.evaluate(() => window.__replayTimers.size)).toBe(0);
+  expect(
+    await page.evaluate(() =>
+      window.__lifetimeSignals.every((signal) => signal.aborted),
+    ),
+  ).toBe(true);
 });
 
 test("all game resources and the real worker are served locally", async ({
