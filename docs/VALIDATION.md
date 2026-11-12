@@ -1,6 +1,6 @@
 # Rivergate verification
 
-Verified locally on **2026-11-12** (Asia/Saigon), Windows, Node **22.18.0**, GyosJS **0.5.3** from the official npm registry. This runtime-only rollout retains the direct import-text signal binding introduced with 0.5.2. The suites below were rerun against the installed npm package without a local core alias.
+Verified locally on **2026-11-12** (Asia/Saigon), Windows, Node **22.18.0**, GyosJS **0.5.4** from the official npm registry. This runtime-only rollout retains the direct import-text signal binding introduced with 0.5.2. The suites below were rerun against the installed npm package without a local core alias.
 
 ## Results
 
@@ -13,11 +13,11 @@ Verified locally on **2026-11-12** (Asia/Saigon), Windows, Node **22.18.0**, Gyo
 | Production build | Passed | `dist/index.html` and bundled JS/CSS/module Worker |
 | npm audit | **0 vulnerabilities reported** | Official npm registry audit on verification date |
 | Visual review (initial 0.5.1 delivery) | Passed for reviewed layouts; not repeated for this runtime-only rollout | Chrome 157.0.8103.39, desktop 1440×1100 and mobile 390×844; 320px overflow checked by all browser projects |
-| Dependency provenance | Official registry | Exact `gyosjs: 0.5.3`; lockfile tarball `https://registry.npmjs.org/gyosjs/-/gyosjs-0.5.3.tgz`, no npmmirror URL |
+| Dependency provenance | Official registry | Exact `gyosjs: 0.5.4`; lockfile tarball `https://registry.npmjs.org/gyosjs/-/gyosjs-0.5.4.tgz`, no npmmirror URL |
 
 `.local/`, `dist/`, and Playwright artifacts are ignored in Git. Reports and screenshots remain on the delivery machine; commands and tests are committed so they can be reproduced. Screenshots reviewed: `.local/desktop-final.png`, `.local/mobile-final.png`, and the per-browser mobile captures.
 
-The 0.5.3 rollout logs are `.local/rollout-0.5.3-check.log` and `.local/rollout-0.5.3-production.log`. All 18 unit tests, 36 dev browser cases and 33 production browser cases passed; the 3 production skips remain the intentional development-only teardown checks. Historical 0.5.1/0.5.2 reproduction observations below are preserved.
+The 0.5.4 rollout passed all 18 unit tests, 36 dev browser cases and 33 production browser cases; the 3 production skips remain the intentional development-only teardown checks. Current browser evidence is `.local/development-results.json` and `.local/production-results.json`. An initial sandboxed run could not launch Firefox/WebKit; rerunning with access to the installed browsers passed all projects. Historical 0.5.3 logs (`.local/rollout-0.5.3-check.log`, `.local/rollout-0.5.3-production.log`) and 0.5.1/0.5.2 reproduction observations below are preserved.
 
 ## Requirement-to-evidence audit
 
