@@ -1,5 +1,6 @@
 import Gyos from "gyosjs/csp";
 import { Game } from "./game.js";
+import { attachBoardDrag } from "./board-drag.js";
 import { legalMoves, inCheck, NAMES, coordinate, col, row } from "./engine.js";
 import "./style.css";
 
@@ -45,6 +46,7 @@ Gyos.scope("Rivergate", () => {
     importError = s(""),
     replaying = s(false);
   let game,
+    boardDrag,
     alive = true,
     replayTimer = null,
     fileGeneration = 0;
@@ -148,6 +150,7 @@ Gyos.scope("Rivergate", () => {
     });
   }
   function clearSelection() {
+    boardDrag?.cancel();
     selected(-1);
   }
   function stopReplay() {
@@ -166,8 +169,7 @@ Gyos.scope("Rivergate", () => {
       return;
     }
     if (from !== -1) {
-      clearSelection();
-      game.commit({ from, to: at });
+      if (game.commit({ from, to: at })) clearSelection();
       render();
     }
   }
@@ -239,6 +241,7 @@ Gyos.scope("Rivergate", () => {
     replayTimer = setTimeout(tick, 850);
   }
   function open(name) {
+    boardDrag?.cancel();
     stopReplay();
     modal(name);
     importError("");
@@ -299,7 +302,7 @@ Gyos.scope("Rivergate", () => {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  game = new Game({ storage, onChange: render });
+  game = new Game({ storage, onChange() { boardDrag?.cancel(); render(); } });
   return {
     cells,
     pieces,
@@ -400,10 +403,12 @@ Gyos.scope("Rivergate", () => {
       game.setMode(event.target.value);
     },
     flip() {
+      boardDrag?.cancel();
       flipped(!flipped());
       render();
     },
     toggleLabels() {
+      boardDrag?.cancel();
       latin(!latin());
       render();
     },
@@ -417,6 +422,15 @@ Gyos.scope("Rivergate", () => {
     },
     onMount() {
       game.start();
+      boardDrag = attachBoardDrag(document.querySelector(".board"), {
+        source(at) {
+          const piece = game.state.board[at];
+          return alive && !modal() && !replaying() && game.humanTurn && piece?.side === game.state.turn ? piece.id : null;
+        },
+        choose(at) { selected(at); focus(at); render(); },
+        targets(at) { return legalMoves(game.state.board, game.state.turn).filter(move => move.from === at).map(move => move.to); },
+        drop: select,
+      });
       document.getElementById("dialog").addEventListener(
         "cancel",
         (event) => {
@@ -442,6 +456,7 @@ Gyos.scope("Rivergate", () => {
         };
     },
     onUnmount() {
+      boardDrag?.dispose();
       alive = false;
       fileGeneration++;
       stopReplay();

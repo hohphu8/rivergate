@@ -48,6 +48,8 @@ Các kiểm tra này chứng minh những luồng đã chạy; không phải tuy
 
 ## Kinh nghiệm tích hợp, không quy thành lỗi core
 
+- Cải thiện thao tác sau rollout 0.5.4: kéo quân bằng chuột có preview và ô đích hợp lệ; click nước sai giữ selection. Pointer capture/preview nằm trong adapter DOM nhỏ, còn selection, legal hints và commit vẫn đi qua state/game hiện có. Không render lại 90 ô bằng signal ở từng pointermove. Adapter dispose cùng scope; hủy khi Escape, mất focus, đổi thế cờ, xoay bàn hoặc scroll. Đây là lựa chọn triển khai của app, chưa phải bằng chứng cần API drag chuyên biệt trong core.
+
 - Worker cần vòng đời riêng: terminate khi undo/reset/đổi mode/xem lịch sử, kiểm tra request ID và position key, rồi kiểm tra lại tính hợp lệ của nước trả về. Promise/computed tự nó không giải quyết kết quả bất đồng bộ đã hết hiệu lực.
 - Bọc timer của trình duyệt bằng arrow function khi inject vào class. Gọi native `setTimeout` như method của một object khác gây `Illegal invocation` trong browser, dù Node unit tests không bắt được.
 - Giữ trạng thái “đang xem lịch sử” độc lập với chỉ số nước. Đến frame cuối không đồng nghĩa được phép tiếp tục ván hoặc tự chạy bot.
