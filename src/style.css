@@ -353,6 +353,25 @@ h1 em {
 .point.chosen::after {
   background: #49644e;
 }
+.board.dragging,
+.board.dragging .point {
+  cursor: grabbing;
+  user-select: none;
+}
+.board [data-drag-source] {
+  opacity: 0.3;
+}
+.board .drag-ghost {
+  pointer-events: none;
+  z-index: 6;
+  transition: none;
+  transform: translate(-50%, -60%) scale(1.06);
+}
+.point.drop-target::before {
+  inset: 5%;
+  background: #446a5022;
+  box-shadow: inset 0 0 0 3px #446a50;
+}
 .board-coordinates {
   display: grid;
   grid-template-columns: repeat(9, 1fr);

@@ -5,6 +5,7 @@ GyosJS dogfood application, initially delivered on 0.5.1 and now using published
 ## Accepted scope
 
 - Vietnamese UI; responsive 9×10 intersection board, red/black pieces, mouse/touch/keyboard, legal targets, check/last-move feedback, reduced motion.
+- Mouse drag previews the moving piece and legal destination; invalid drops leave the board unchanged. Click/tap and keyboard remain available, and invalid destination clicks retain selection.
 - Pure immutable rules: seven piece types, palace/river, horse leg, elephant eye, cannon screen, facing generals, self-check, checkmate and stalemate loss.
 - User approved casual repetition: same board and side-to-move three times is a draw. No tournament perpetual check/chase adjudication. Explicit in help and versioned recordings. No automatic no-progress draw; players can agree a draw. Recording limit 600 plies ends a casual draw rather than silently truncating saves.
 - Two humans on one device, or human Red against basic Black bot. Iterative deepening alpha-beta in a real module Worker. Bounded thinking, progress, cancellation by termination, generation/position guards, worker errors and retry/local fallback.
