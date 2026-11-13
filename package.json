@@ -15,7 +15,7 @@
     "check": "npm test && npm run build && npm run test:e2e"
   },
   "dependencies": {
-    "gyosjs": "0.5.4"
+    "gyosjs": "0.5.5"
   },
   "devDependencies": {
     "vite": "6.4.6",

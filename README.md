@@ -1,6 +1,6 @@
 # Rivergate · Cờ tướng qua sông
 
-A standalone Vietnamese Xiangqi app built with **GyosJS 0.5.4**, plain HTML/CSS/JavaScript and Vite. Play Red against a basic bot, or play both sides with a friend on one device. No backend, accounts, telemetry or external runtime assets.
+A standalone Vietnamese Xiangqi app built with **GyosJS 0.5.5**, plain HTML/CSS/JavaScript and Vite. Play Red against a basic bot, or play both sides with a friend on one device. No backend, accounts, telemetry or external runtime assets.
 
 Use click/tap to select and move, or drag a piece with the mouse onto a highlighted legal point. Escape, dropping outside the board, or an invalid drop cancels the drag. Invalid destination clicks retain the selected piece and its legal hints. Touch retains tap/scroll behavior; arrow keys and Enter remain available.
 

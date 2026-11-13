@@ -1,6 +1,6 @@
 # Rivergate verification
 
-Verified locally on **2026-11-13** (Asia/Saigon), Windows, Node **22.18.0**, GyosJS **0.5.4** from the official npm registry. This interaction update adds mouse drag moves and retains selection after an invalid destination. The suites below were rerun against the installed npm package without a local core alias.
+Verified locally on **2026-11-13** (Asia/Saigon), Windows, Node **22.18.0**, GyosJS **0.5.5** from the official npm registry. This runtime update retains the previously added mouse drag moves and selection after an invalid destination. The suites below were rerun against the installed npm package without a local core alias.
 
 ## Results
 
@@ -11,14 +11,14 @@ Verified locally on **2026-11-13** (Asia/Saigon), Windows, Node **22.18.0**, Gyo
 | Production browser suite | **42 passed**, 0 flaky, 6 intentional skips | `.local/production-results.json`; two teardown scenarios per browser require the development-only hook |
 | Scope teardown | **3 passed**, included in dev suite | Worker termination, replay timer removal, listener AbortSignals on all three browsers |
 | Production build | Passed | `dist/index.html` and bundled JS/CSS/module Worker |
-| npm audit (0.5.4 rollout, 2026-11-12) | **0 vulnerabilities reported** | Dependency manifest and lockfile unchanged in this interaction update |
-| Visual review (mouse drag) | Passed | Desktop 1440×1100; lifted piece, translucent source and legal destination marker; `.local/board-drag-desktop.png` |
+| npm audit (0.5.5 rollout, 2026-11-13) | **0 vulnerabilities reported** | Clean npm ci from the official registry; only the GyosJS dependency changed |
+| Visual review (mouse drag, preceding interaction update) | Passed previously; not repeated for this runtime-only rollout | Desktop 1440×1100; lifted piece, translucent source and legal destination marker; `.local/board-drag-desktop.png` |
 | Visual review (initial 0.5.1 delivery) | Passed for reviewed layouts; not repeated for this runtime-only rollout | Chrome 157.0.8103.39, desktop 1440×1100 and mobile 390×844; 320px overflow checked by all browser projects |
-| Dependency provenance | Official registry | Exact `gyosjs: 0.5.4`; lockfile tarball `https://registry.npmjs.org/gyosjs/-/gyosjs-0.5.4.tgz`, no npmmirror URL |
+| Dependency provenance | Official registry | Exact `gyosjs: 0.5.5`; lockfile tarball `https://registry.npmjs.org/gyosjs/-/gyosjs-0.5.5.tgz`, no npmmirror URL |
 
 `.local/`, `dist/`, and Playwright artifacts are ignored in Git. Reports and screenshots remain on the delivery machine; commands and tests are committed so they can be reproduced. Screenshots reviewed: `.local/desktop-final.png`, `.local/mobile-final.png`, and the per-browser mobile captures.
 
-The preceding 0.5.4 runtime rollout passed 18 unit tests, 36 dev browser cases and 33 production browser cases (3 intentional skips). The interaction update adds four scenarios per browser: legal drag in both orientations and read-only history, invalid/cancelled drops and selection retention, pointer cancellation, and scope disposal during a drag. Current browser evidence is `.local/development-results.json` and `.local/production-results.json`. Browser launch required access to the installed browsers outside the sandbox. Historical 0.5.3 logs (`.local/rollout-0.5.3-check.log`, `.local/rollout-0.5.3-production.log`) and 0.5.1/0.5.2 reproduction observations below are preserved.
+The preceding 0.5.4 runtime rollout passed 18 unit tests, 36 dev browser cases and 33 production browser cases (3 intentional skips). The preceding interaction update added four scenarios per browser: legal drag in both orientations and read-only history, invalid/cancelled drops and selection retention, pointer cancellation, and scope disposal during a drag. Current browser evidence is `.local/development-results.json` and `.local/production-results.json`. The 0.5.5 rollout reran all of these cases. Logs: `.local/rollout-0.5.5-check.log` (unit/build; initial browser run was sandbox-blocked), `.local/rollout-0.5.5-browser.log` and `.local/rollout-0.5.5-production.log` (successful full browser runs). Browser launch required access to the installed browsers outside the sandbox. Historical 0.5.3 logs (`.local/rollout-0.5.3-check.log`, `.local/rollout-0.5.3-production.log`) and 0.5.1/0.5.2 reproduction observations below are preserved.
 
 ## Requirement-to-evidence audit
 
@@ -48,7 +48,7 @@ Built with Vite 6.4.6; sizes measured from the generated files (decimal kB, Node
 | Artifact | Size | Gzip |
 | --- | ---: | ---: |
 | HTML | 17.23 kB | 4.94 kB |
-| Application + GyosJS CSP JS | 251.87 kB | 78.96 kB |
+| Application + GyosJS CSP JS | 252.82 kB | 79.82 kB |
 | CSS | 13.82 kB | 4.01 kB |
 | Dedicated Worker JS | 3.59 kB | 1.76 kB |
 

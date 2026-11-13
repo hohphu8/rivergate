@@ -1,6 +1,6 @@
 # GyosJS dogfood — Rivergate
 
-Ngày kiểm tra: 2026-11-12. Runtime hiện tại: **npm `gyosjs@0.5.4`, entry `gyosjs/csp`**. Không dùng bản core sửa local. Xem [phạm vi](PLAN.md), [bằng chứng kiểm tra](VALIDATION.md).
+Ngày kiểm tra: 2026-11-12. Runtime hiện tại: **npm `gyosjs@0.5.5`, entry `gyosjs/csp`**. Không dùng bản core sửa local. Xem [phạm vi](PLAN.md), [bằng chứng kiểm tra](VALIDATION.md).
 
 ## Đã sửa trong 0.5.2: signal trong scope bị mất metadata
 
