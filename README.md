@@ -78,4 +78,6 @@ On a POSIX shell: `RIVERGATE_PRODUCTION=1 npm run test:e2e`.
 
 The board uses stable piece IDs as `g-key`; moving a piece updates its position on the same DOM element. The engine stays independent of the UI. Worker messages carry plain snapshots, and accepted replies are checked again against the current position and legal moves.
 
-See [dogfood findings](docs/DOGFOOD.md), [verification evidence](docs/VALIDATION.md) and [accepted scope](docs/PLAN.md). The repository is local and has no configured remote. Publication belongs to the owner; nothing is pushed automatically.
+See [dogfood findings](docs/DOGFOOD.md), [verification evidence](docs/VALIDATION.md) and [accepted scope](docs/PLAN.md). Source is maintained in [hohphu8/rivergate](https://github.com/hohphu8/rivergate); deployment is managed by the owner.
+
+See the [bundle follow-up](docs/PERFORMANCE.md) for measured CSP namespace-import savings; the published runtime pin and Worker behavior are unchanged.

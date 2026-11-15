@@ -1,4 +1,5 @@
-import Gyos from "gyosjs/csp";
+import * as Gyos from "gyosjs/csp";
+import { version as gyosVersion } from "gyosjs/package.json";
 import { Game } from "./game.js";
 import { attachBoardDrag } from "./board-drag.js";
 import { legalMoves, inCheck, NAMES, coordinate, col, row } from "./engine.js";
@@ -452,7 +453,7 @@ Gyos.scope("Rivergate", () => {
           record: () => game.record(),
           thinking: () => game.thinking,
           dispose: () => Gyos.cleanup(document.getElementById("app")),
-          version: Gyos.version,
+          version: gyosVersion,
         };
     },
     onUnmount() {
