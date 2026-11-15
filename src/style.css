@@ -374,6 +374,12 @@ h1 em {
 .move-feedback p { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
 .move-feedback small { display: block; font-size: 11px; line-height: 1.5; }
 .move-feedback .repetition-note { margin-top: 8px; line-height: 1.5; }
+.online-card { padding: 18px; border: 1px solid #b8c8bd; border-radius: 5px; background: #eef2e9; margin-bottom: 18px; }
+.online-card h2 { font-size: 20px; margin: 0 0 12px; }
+.online-card p, .online-card label { font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.online-card button { padding: 10px 8px; margin: 4px 4px 4px 0; }
+.online-card small { display: block; font-size: 11px; line-height: 1.6; margin-top: 6px; }
+.online-card .invite-link { width: 100%; box-sizing: border-box; margin: 8px 0; padding: 10px; min-width: 0; font-size: 12px; }
 .point.last-from.legal::after {
   background: transparent;
 }

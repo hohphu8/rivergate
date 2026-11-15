@@ -19,6 +19,8 @@ Production browser suite: 48 passed across Chromium, Firefox and WebKit; 6 exist
 
 ## Proposed next milestone: private online rooms
 
+Update: this milestone is now implemented. See [setup and deployment](ONLINE.md), [API contract](ONLINE-API.md) and [verification](ONLINE-VALIDATION.md). The proposal below is retained as the original scope.
+
 This is a proposal, not an implemented multiplayer service. Start with two players sharing a room link; defer matchmaking, accounts, ranking and spectators.
 
 Use one server-authoritative rules/state path. A small JavaScript server can reuse the existing pure rules engine; client moves are requests, never authoritative board updates. Each accepted move has a room revision and request ID. Duplicate requests, wrong turns and stale revisions must be rejected or acknowledged idempotently. Reconnect obtains a canonical snapshot plus validated move history.

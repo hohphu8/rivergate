@@ -153,7 +153,7 @@
                 <span aria-hidden="true">⇅</span> Xoay bàn</button
               ><button @click="toggleLabels()" :aria-pressed="latin()">
                 <span aria-hidden="true">字</span> {labelButton()}</button
-              ><button @click="undo()" :disabled="count() === 0">
+              ><button @click="undo()" :disabled="count() === 0 || online()">
                 <span aria-hidden="true">↶</span> Lùi nước
               </button>
             </div>
@@ -162,6 +162,34 @@
             </p>
           </section>
           <aside class="sidebar" aria-label="Điều khiển và lịch sử">
+            <section class="online-card" aria-label="Chơi online">
+              <h2>Qua sông cùng bạn</h2>
+              <p data-testid="room-info" role="status">{roomInfo()}</p>
+              <div g-show="!online()">
+                <button class="primary" g-show="incomingRoom()" @click="joinRoom()">Vào phòng được mời</button>
+                <button @click="open('online-create')">Tạo phòng online</button>
+                <button g-show="savedRoom()" @click="resumeRoom()">Vào lại phòng</button>
+              </div>
+              <div g-show="online()">
+                <div g-show="inviteLink()">
+                  <label>Link mời một người bạn
+                    <input class="invite-link" aria-label="Link mời" readonly :value="inviteLink()" />
+                  </label>
+                  <button @click="copyInvite()">Sao chép link mời</button>
+                  <small>Ai nhận link trước có thể nhận ghế Đen. Không chia sẻ công khai.</small>
+                </div>
+                <p g-show="offerText()" role="status">{offerText()}</p>
+                <div g-show="canAnswer()">
+                  <button @click="answerOffer(true)">Chấp nhận đề nghị</button>
+                  <button @click="answerOffer(false)">Từ chối đề nghị</button>
+                </div>
+                <button g-show="!onlineConnected()" @click="retry()">Kết nối lại</button>
+                <button @click="open('online-leave')">Về bàn local</button>
+                <small>Không đồng hồ; mất mạng không tự xử thua. Lặp thế 3 lần vẫn hòa.</small>
+              </div>
+              <p g-show="roomError()" role="status">{roomError()}</p>
+              <p g-show="actionError()" role="alert">{actionError()}</p>
+            </section>
             <section
               class="status-card"
               :class="check() ? 'status-card is-check' : 'status-card'"
@@ -188,23 +216,24 @@
                 <button @click="retry()">Thử lại bot</button>
               </div>
               <label class="mode-label" for="mode">ĐỐI THỦ</label>
-              <select id="mode" :value="mode()" @change="changeMode($event)">
+              <select id="mode" :value="mode()" :disabled="online()" @change="changeMode($event)">
                 <option value="bot">Chơi với bot · Bạn cầm Đỏ</option>
                 <option value="local">Hai người · Cùng thiết bị</option>
+                <option value="online" :disabled="!online()">Hai người · Online</option>
               </select>
-              <button class="primary new-game" @click="open('new')">
+              <button class="primary new-game" @click="open('new')" :disabled="online() && (!canOnlineAct() || offerText())">
                 <span aria-hidden="true">＋</span> Ván mới
               </button>
               <div class="quiet-actions">
                 <button
                   @click="open('draw')"
-                  :disabled="finished() || reviewing()"
+                  :disabled="finished() || reviewing() || (online() && (!canOnlineAct() || offerText()))"
                 >
                   Hòa ván</button
                 ><span>·</span
                 ><button
                   @click="open('resign')"
-                  :disabled="finished() || reviewing()"
+                  :disabled="finished() || reviewing() || (online() && !canOnlineAct())"
                 >
                   Xin thua
                 </button>
@@ -276,7 +305,7 @@
               </div>
               <div class="file-actions">
                 <button @click="exportGame()">Xuất bản ghi ↗</button
-                ><button @click="open('import')">Mở bản ghi</button>
+                ><button @click="open('import')" :disabled="online()">Mở bản ghi</button>
               </div>
             </section>
             <p class="rules-note">
@@ -351,6 +380,10 @@
             tự xử hòa theo số nước không bắt quân.
           </p>
           <h3>Bàn cờ của bạn</h3>
+          <p>Online: tạo phòng và gửi link cho bạn. Server xác nhận từng nước; phòng tồn tại 24 giờ.
+            Reload hoặc “Vào lại phòng” giữ ghế trên cùng trình duyệt. Xóa dữ liệu trình duyệt sẽ mất quyền vào ghế.
+            Hòa/ván mới cần đối thủ đồng ý; chưa hỗ trợ lùi nước online. Không tự xử thua khi mất mạng.
+            Ván local vẫn được giữ riêng; xuất JSON để giữ bản ghi trước khi phòng hết hạn.</p>
           <p>
             Bot cơ bản, bạn cầm Đỏ. “Lùi nước” đưa ván về lượt của bạn; hai
             người thì lùi một nước. Xem lịch sử không thay đổi ván lưu. Bấm “Trở
@@ -389,7 +422,7 @@
           <button class="primary" @click="importGame()">Mở ván này</button>
         </div>
         <div
-          g-show="modal() === 'new' || modal() === 'draw' || modal() === 'resign'"
+          g-show="modal() === 'new' || modal() === 'draw' || modal() === 'resign' || modal() === 'online-create' || modal() === 'online-leave'"
         >
           <p>{confirmText()}</p>
           <div class="confirm-actions">

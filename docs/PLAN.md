@@ -1,5 +1,7 @@
 # Rivergate — cờ tướng qua sông
 
+> Follow-up: private online rooms are now implemented with an optional single-process Node server. The original v1 boundaries below remain historical context. See [online setup](ONLINE.md), [API contract](ONLINE-API.md) and [verification](ONLINE-VALIDATION.md). No core API or GyosJS version change.
+
 GyosJS dogfood application, initially delivered on 0.5.1 and now using published 0.5.6. Repository: `hohphu8/rivergate`. No backend, accounts, telemetry or multiplayer service. Incremental Git commits; hosting is managed by the owner.
 
 ## Accepted scope

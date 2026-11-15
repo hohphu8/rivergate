@@ -1,6 +1,7 @@
 import * as Gyos from "gyosjs/csp";
 import { version as gyosVersion } from "gyosjs/package.json";
 import { Game } from "./game.js";
+import { OnlineGame, ROOM_SAVE, randomHex, savedSeat } from './online.js';
 import { attachBoardDrag } from "./board-drag.js";
 import { legalMoves, inCheck, NAMES, coordinate, col, row, positionKey } from "./engine.js";
 import "./style.css";
@@ -48,6 +49,13 @@ Gyos.scope("Rivergate", () => {
     importText = s(""),
     importError = s(""),
     replaying = s(false);
+  const online = s(false), roomInfo = s(''), roomError = s(''), inviteLink = s(''),
+    offerText = s(''), canAnswer = s(false), canOnlineAct = s(false),
+    onlineConnected = s(false), savedRoom = s(false), incomingRoom = s(false), actionError = s(''), ownSide = s('');
+  const invitation = new URLSearchParams(location.hash.slice(1));
+  const invitedId = invitation.get('room'), invitedKey = invitation.get('invite');
+  const validInvite = /^[a-f0-9]{24}$/.test(invitedId || '') && /^[a-f0-9]{64}$/.test(invitedKey || '');
+  incomingRoom(validInvite);
   let game,
     boardDrag,
     alive = true,
@@ -90,6 +98,20 @@ Gyos.scope("Rivergate", () => {
         : [],
     );
     Gyos.batch(() => {
+      const isOnline = game instanceof OnlineGame, snap = isOnline ? game.snapshot : null;
+      online(isOnline);
+      ownSide(snap?.side || '');
+      actionError(isOnline ? game.actionError : '');
+      onlineConnected(isOnline && game.connected);
+      savedRoom(!!savedSeat(storage));
+      canOnlineAct(isOnline && game.connected && !!snap?.joined && !game.pending && !game.reviewing);
+      roomInfo(isOnline
+        ? `${snap ? 'Bạn cầm ' + SIDES[snap.side] : 'Đang vào phòng'} · ${!game.connected ? 'Mất kết nối / đang kết nối' : !snap?.joined ? 'Chờ bạn vào phòng' : snap.presence[snap.side === 'red' ? 'black' : 'red'] ? 'Đối thủ đang kết nối' : 'Đối thủ mất kết nối / chưa phản hồi'}${snap ? ' · Hết hạn ' + new Date(snap.expiresAt).toLocaleString('vi-VN') : ''}`
+        : 'Tạo phòng mới, gửi link cho một người bạn. Phòng tồn tại 24 giờ.');
+      canAnswer(!!(snap?.offer && snap.offer.by !== snap.side && canOnlineAct()));
+      offerText(snap?.offer ? `${snap.offer.by === snap.side ? 'Bạn' : 'Đối thủ'} đề nghị ${snap.offer.kind === 'draw' ? 'hòa ván' : 'chơi ván mới'}. Đi tiếp sẽ hủy đề nghị.` : '');
+      inviteLink(isOnline && game.seat.stage === 'ready' && snap?.side === 'red' && !snap.joined
+        ? `${location.origin}${location.pathname}#room=${game.seat.id}&invite=${game.seat.invite}` : '');
       pieces(displayPieces);
       const occurrences = state.positions.filter(key => key === positionKey(state.board, state.turn)).length;
       repetitionNote(!result && occurrences === 2
@@ -129,6 +151,11 @@ Gyos.scope("Rivergate", () => {
               ? "Đen đang suy nghĩ"
               : `${SIDES[state.turn]} tới lượt${isCheck ? " · Chiếu!" : ""}`,
       );
+      if (isOnline && !game.reviewing && !result) {
+        if (!game.connected) status('Đang kết nối phòng');
+        else if (!snap?.joined) status('Chờ người thứ hai');
+        else if (game.pending) status('Đang xác nhận thao tác');
+      }
       detail(
         result
           ? REASONS[result.reason]
@@ -140,6 +167,7 @@ Gyos.scope("Rivergate", () => {
                 ? "Hãy đưa tướng ra khỏi thế bị chiếu."
                 : "Chọn quân, rồi chọn một điểm được đánh dấu.",
       );
+      if (isOnline && !game.reviewing && !result && (!game.connected || !snap?.joined || game.pending)) detail(game.notice);
       progress(
         game.progress
           ? `Độ sâu ${game.progress.depth} · ${game.progress.nodes.toLocaleString("vi-VN")} thế cờ`
@@ -268,6 +296,8 @@ Gyos.scope("Rivergate", () => {
     const action = modal();
     close();
     clearSelection();
+    if (action === 'online-create') { createRoom(); return; }
+    if (action === 'online-leave') { leaveRoom(); return; }
     if (action === "new") game.newGame();
     else game.finish(action === "draw" ? "draw" : "resign");
   }
@@ -312,8 +342,53 @@ Gyos.scope("Rivergate", () => {
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  game = new Game({ storage, onChange() { boardDrag?.cancel(); render(); } });
+  let previousBoard;
+  function changed() {
+    if (previousBoard !== game?.state.board || (game instanceof OnlineGame && !game.humanTurn)) {
+      boardDrag?.cancel(); selected(-1);
+    }
+    previousBoard = game?.state.board;
+    render();
+  }
+  function enterRoom(seat) {
+    roomError('');
+    try { storage.setItem(ROOM_SAVE, JSON.stringify(seat)); }
+    catch { roomError('Cần cho phép lưu trên trình duyệt để giữ ghế khi tải lại. Chưa vào phòng.'); return; }
+    stopReplay(); clearSelection(); game?.dispose();
+    game = new OnlineGame({ seat, storage, onChange: changed });
+    flipped(seat.stage === 'join' || seat.side === 'black');
+    historyReplace(seat.id);
+    incomingRoom(false);
+    game.start();
+  }
+  function historyReplace(id) {
+    window.history.replaceState(null, '', `${location.pathname}${location.search}${id ? '#room=' + id : ''}`);
+  }
+  function createRoom() {
+    try { enterRoom({ id: randomHex(12), key: randomHex(32), invite: randomHex(32), stage: 'create', side: 'red' }); }
+    catch { roomError('Trình duyệt cần HTTPS hoặc localhost để tạo phòng.'); }
+  }
+  function joinRoom() {
+    if (!validInvite) return;
+    const saved = savedSeat(storage);
+    if (saved?.id === invitedId) { enterRoom(saved); return; }
+    try { enterRoom({ id: invitedId, key: randomHex(32), invite: invitedKey, stage: 'join', side: 'black' }); }
+    catch { roomError('Trình duyệt cần HTTPS hoặc localhost để vào phòng.'); }
+  }
+  function leaveRoom() {
+    stopReplay(); clearSelection(); game.dispose(); historyReplace('');
+    game = new Game({ storage, onChange: changed }); game.start();
+  }
+  game = new Game({ storage, onChange: changed });
   return {
+    online, roomInfo, roomError, inviteLink, offerText, canAnswer, canOnlineAct, onlineConnected, savedRoom, incomingRoom, actionError,
+    joinRoom,
+    resumeRoom() { const seat = savedSeat(storage); if (seat) enterRoom(seat); },
+    answerOffer(accept) { if (online()) game.send({ type: 'answer', accept }); },
+    async copyInvite() {
+      try { await navigator.clipboard.writeText(inviteLink()); roomError('Đã sao chép link mời.'); }
+      catch { roomError('Hãy chọn và sao chép link bên dưới.'); }
+    },
     runtimeVersion: gyosVersion,
     cells,
     pieces,
@@ -351,6 +426,7 @@ Gyos.scope("Rivergate", () => {
         : flipped()
           ? "black"
           : "red";
+      if (online()) return ownSide() === side ? `Bạn cầm ${SIDES[side]}` : `Bạn chơi · ${SIDES[side]}`;
       return mode() === "local"
         ? `Bên ${SIDES[side]}`
         : side === "red"
@@ -358,6 +434,7 @@ Gyos.scope("Rivergate", () => {
           : "Người bạn máy";
     },
     playerDetail() {
+      if (online()) return 'Hai người · Phòng online';
       return mode() === "bot" ? progress() : "Hai người · cùng thiết bị";
     },
     labelButton() {
@@ -378,10 +455,16 @@ Gyos.scope("Rivergate", () => {
           new: "Bắt đầu một ván mới?",
           draw: "Khép ván bằng một lời hòa?",
           resign: "Bạn muốn xin thua?",
+          'online-create': 'Tạo phòng chơi online?',
+          'online-leave': 'Về bàn cờ local?',
         }[modal()] || ""
       );
     },
     confirmText() {
+      if (modal() === 'online-create') return 'Bạn cầm Đỏ, người mở link mời cầm Đen. Phòng được lưu 24 giờ. Ván local vẫn được giữ; phòng online trước đó sẽ không còn nút vào lại trên trình duyệt này.';
+      if (modal() === 'online-leave') return 'Phòng vẫn tồn tại, không tự xử thua khi rời mạng. Bạn có thể vào lại bằng nút Vào lại phòng.';
+      if (online()) return modal() === 'resign' ? 'Bạn sẽ nhận thua, dù đang là lượt của bên nào.'
+        : 'Gửi đề nghị tới đối thủ. Ván chỉ thay đổi khi người kia đồng ý. Đi tiếp sẽ hủy đề nghị.';
       if (modal() === "new")
         return "Ván đang chơi sẽ được thay thế. Nếu muốn giữ lại, hãy xuất bản ghi trước.";
       if (modal() === "draw")
@@ -396,6 +479,8 @@ Gyos.scope("Rivergate", () => {
           new: "Bắt đầu ván mới",
           draw: "Đồng ý hòa",
           resign: "Xác nhận xin thua",
+          'online-create': 'Tạo phòng',
+          'online-leave': 'Về local',
         }[modal()] || ""
       );
     },
@@ -434,7 +519,9 @@ Gyos.scope("Rivergate", () => {
       game.retry();
     },
     onMount() {
-      game.start();
+      const seat = savedSeat(storage);
+      if (seat && invitation.get('room') === seat.id) enterRoom(seat);
+      else game.start();
       boardDrag = attachBoardDrag(document.querySelector(".board"), {
         source(at) {
           const piece = game.state.board[at];

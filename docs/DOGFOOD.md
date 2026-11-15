@@ -62,3 +62,16 @@ Các kiểm tra này chứng minh những luồng đã chạy; không phải tuy
 2. Thêm recipe **Worker + lifecycle + stale-result guard** vào docs bằng một ví dụ nhỏ. Chưa có bằng chứng cần thêm API Worker chuyên biệt vào core.
 3. Bổ sung hướng dẫn formatter cho expression trong HTML. Giữ biểu thức ngắn hoặc dùng `g-text`/hàm trình bày cho chuỗi dài.
 4. Tiếp tục app reactive kế tiếp sau khi dùng thử Rivergate thực tế. Bàn cờ xác nhận orchestration và keyed rendering; nó không thay thế bài stress hàng nghìn phần tử hoặc canvas/game loop.
+# Online-room follow-up — 2026-11-16
+
+Private rooms add canonical server state, per-seat credentials, revisions and idempotent commands without changing GyosJS 0.5.6. The optional Node service reuses the pure engine; `OnlineGame` supplies the existing board/history UI with accepted snapshots. Local saves remain separate.
+
+Application findings during actual two-browser tests:
+
+- An async response's plain class property is not itself a reactive dependency. The player's assigned side now has an explicit signal consumed by the player label; otherwise the label could retain its pre-connection text.
+- Polling must not cancel a pointer gesture merely because presence refreshed. Board identity / turn availability govern drag cancellation; a browser case holds a piece through a poll and then drops it.
+- The request ID must survive a lost acknowledgement and reload. Persist pending commands before sending, keep the old revision on retry, and reconstruct from the server response. Never rebase a rejected move silently.
+- Native `fetch` used as an injected class member must retain the correct invocation context. The app wraps `globalThis.fetch`; this was an adapter issue, not a GyosJS error.
+- Online cleanup aborts the in-flight fetch and clears retry/deadline timers. Late responses cannot publish to a disposed game. This uses existing lifecycle hooks; no networking API or runtime patch was needed.
+
+See [contract](ONLINE-API.md), [setup](ONLINE.md) and [verification](ONLINE-VALIDATION.md). These findings are application integration work; they are not evidence that the core needs a new release.
