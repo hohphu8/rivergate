@@ -2,7 +2,30 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { BotClient } from "../src/bot-client.js";
 import { search } from "../src/search.js";
-import { initialState, play, legalMoves } from "../src/engine.js";
+import { initialState, play, legalMoves, positionKey, movedBoard, other } from "../src/engine.js";
+
+test("shallow search sees the recapture after an opening cannon takes a horse", () => {
+  const state = play(initialState(), { from: 54, to: 45 });
+  assert(legalMoves(state.board, state.turn).some(m => m.from === 19 && m.to === 82));
+  const result = search(state, { maxDepth: 1, now: () => 0 });
+  assert.equal(result.depth, 1);
+  assert(![82, 88].includes(result.move.to), "do not trade a cannon for a defended horse");
+  assert(result.score >= 0);
+});
+
+test("equal-scoring choices prefer an unvisited position; deadline still returns a legal move", () => {
+  const state = play(initialState(), { from: 54, to: 45 });
+  const first = search(state, { maxDepth: 1, now: () => 0 });
+  const key = positionKey(movedBoard(state.board, first.move.from, first.move.to), other(state.turn));
+  const repeated = { ...state, positions: [...state.positions, key] };
+  const next = search(repeated, { maxDepth: 1, now: () => 0 });
+  assert.equal(next.score, first.score);
+  assert.notDeepEqual(next.move, first.move);
+  let tick = 0;
+  const timed = search(state, { budgetMs: 30, now: () => tick++ * 40 });
+  assert.equal(timed.depth, 0);
+  assert(legalMoves(state.board, state.turn).some(m => m.from === timed.move.from && m.to === timed.move.to));
+});
 test("search produces legal moves without mutating state, with bounded depth", () => {
   const state = play(initialState(), { from: 54, to: 45 }),
     before = structuredClone(state),

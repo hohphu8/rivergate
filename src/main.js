@@ -2,7 +2,7 @@ import * as Gyos from "gyosjs/csp";
 import { version as gyosVersion } from "gyosjs/package.json";
 import { Game } from "./game.js";
 import { attachBoardDrag } from "./board-drag.js";
-import { legalMoves, inCheck, NAMES, coordinate, col, row } from "./engine.js";
+import { legalMoves, inCheck, NAMES, coordinate, col, row, positionKey } from "./engine.js";
 import "./style.css";
 
 const GLYPHS = {
@@ -13,7 +13,7 @@ const SIDES = { red: "Đỏ", black: "Đen" };
 const REASONS = {
   mate: "Chiếu bí",
   stalemate: "Hết nước hợp lệ",
-  repetition: "Thế cờ lặp 3 lần",
+  repetition: "Cùng thế cờ và lượt đi đã lặp 3 lần: hòa theo luật phổ thông, kể cả khi đang chiếu. Chưa phân xử chiếu dai theo luật giải.",
   limit: "Giới hạn 600 lượt",
   agreed: "Đồng ý hòa",
   resign: "Xin thua",
@@ -42,6 +42,8 @@ Gyos.scope("Rivergate", () => {
     finished = s(false),
     check = s(false),
     captured = s("Chưa có quân bị bắt"),
+    lastMove = s("Chưa có nước đi"),
+    repetitionNote = s(""),
     modal = s(""),
     importText = s(""),
     importError = s(""),
@@ -82,19 +84,26 @@ Gyos.scope("Rivergate", () => {
               at,
               glyph: latin() ? NAMES[p.type] : GLYPHS[p.side][p.type],
               style: place(at),
-              className: `piece ${p.side} ${selected() === at ? "selected" : ""} ${isCheck && p.type === "g" && p.side === state.turn ? "checked" : ""} ${latin() ? "latin" : ""}`,
+              className: `piece ${p.side} ${state.last?.to === at ? "last-moved" : ""} ${selected() === at ? "selected" : ""} ${isCheck && p.type === "g" && p.side === state.turn ? "checked" : ""} ${latin() ? "latin" : ""}`,
             },
           ]
         : [],
     );
     Gyos.batch(() => {
       pieces(displayPieces);
+      const occurrences = state.positions.filter(key => key === positionKey(state.board, state.turn)).length;
+      repetitionNote(!result && occurrences === 2
+        ? "Thế cờ và lượt đi này đã xuất hiện 2 lần. Nếu lặp lần thứ 3, ván sẽ hòa, kể cả khi đang chiếu."
+        : "");
+      lastMove(state.last
+        ? `${game.reviewing ? "Nước đang xem" : "Nước vừa đi"}: ${SIDES[state.board[state.last.to].side]} · ${NAMES[state.board[state.last.to].type]} ${coordinate(state.last.from)} → ${coordinate(state.last.to)}`
+        : "Chưa có nước đi");
       cells(
         Array.from({ length: 90 }, (_, at) => ({
           at,
           style: place(at),
-          label: `${coordinate(at)}${state.board[at] ? `, ${NAMES[state.board[at].type]} ${SIDES[state.board[at].side]}` : ", trống"}${possible.includes(at) ? ", có thể đi tới" : ""}`,
-          className: `point ${possible.includes(at) ? "legal" : ""} ${state.last && (at === state.last.from || at === state.last.to) ? "last" : ""} ${chosen === at ? "chosen" : ""}`,
+          label: `${coordinate(at)}${state.board[at] ? `, ${NAMES[state.board[at].type]} ${SIDES[state.board[at].side]}` : ", trống"}${possible.includes(at) ? ", có thể đi tới" : ""}${state.last?.from === at ? ", điểm xuất phát nước vừa đi" : ""}${state.last?.to === at ? ", điểm đến nước vừa đi" : ""}`,
+          className: `point ${possible.includes(at) ? "legal" : ""} ${state.last?.from === at ? "last-from" : ""} ${state.last?.to === at ? "last-to" : ""} ${chosen === at ? "chosen" : ""}`,
           tab: at === focus() ? 0 : -1,
         })),
       );
@@ -305,6 +314,7 @@ Gyos.scope("Rivergate", () => {
   }
   game = new Game({ storage, onChange() { boardDrag?.cancel(); render(); } });
   return {
+    runtimeVersion: gyosVersion,
     cells,
     pieces,
     history,
@@ -327,6 +337,8 @@ Gyos.scope("Rivergate", () => {
     finished,
     check,
     captured,
+    lastMove,
+    repetitionNote,
     modal,
     importText,
     importError,

@@ -1,6 +1,6 @@
 # Rivergate — cờ tướng qua sông
 
-GyosJS dogfood application, initially delivered on 0.5.1 and now using published 0.5.5. Repository: `hohphu8/rivergate`. No backend, accounts, telemetry or multiplayer service. Incremental Git commits; hosting is managed by the owner.
+GyosJS dogfood application, initially delivered on 0.5.1 and now using published 0.5.6. Repository: `hohphu8/rivergate`. No backend, accounts, telemetry or multiplayer service. Incremental Git commits; hosting is managed by the owner.
 
 ## Accepted scope
 

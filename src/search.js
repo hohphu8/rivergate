@@ -5,6 +5,8 @@ import {
   crossed,
   col,
   positionKey,
+  inCheck,
+  MAX_PLIES,
 } from "./engine.js";
 const VALUE = { g: 10000, r: 900, c: 450, h: 400, e: 200, a: 200, p: 100 };
 const MATE = 100000;
@@ -46,14 +48,25 @@ export function search(
       (a, b) =>
         (VALUE[board[b.to]?.type] || 0) - (VALUE[board[a.to]?.type] || 0),
     );
-  function negamax(board, side, depth, alpha, beta, ply, path) {
+  function negamax(board, side, depth, alpha, beta, ply, path, quietLeft = 4) {
     if ((++nodes & 31) === 0 && now() >= deadline) throw expired;
     const key = positionKey(board, side);
-    if (path.filter((k) => k === key).length >= 3) return 0;
-    const moves = legalMoves(board, side);
+    let moves = legalMoves(board, side);
     if (!moves.length) return -MATE + ply;
-    if (depth === 0) return evaluate(board, side);
+    if (path.filter((k) => k === key).length >= 3 || state.ply + ply >= MAX_PLIES) return 0;
     let value = -Infinity;
+    if (depth <= 0) {
+      // Do not value an unfinished exchange as free material. In check, search
+      // every legal escape; otherwise extend captures only. Bound both time and
+      // extra plies so checking sequences cannot monopolize the Worker.
+      if (quietLeft === 0) return evaluate(board, side);
+      if (!inCheck(board, side)) {
+        value = evaluate(board, side);
+        if (value >= beta) return value;
+        alpha = Math.max(alpha, value);
+        moves = moves.filter(move => board[move.to]);
+      }
+    }
     for (const move of order(board, moves)) {
       const next = movedBoard(board, move.from, move.to),
         nextSide = other(side);
@@ -62,7 +75,7 @@ export function search(
         -negamax(next, nextSide, depth - 1, -beta, -alpha, ply + 1, [
           ...path,
           positionKey(next, nextSide),
-        ]),
+        ], depth <= 0 ? quietLeft - 1 : quietLeft),
       );
       alpha = Math.max(alpha, value);
       if (alpha >= beta) break;
@@ -79,17 +92,27 @@ export function search(
           Number(b.from === best.from && b.to === best.to) -
           Number(a.from === best.from && a.to === best.to),
       );
+      let candidateRepeats = Infinity;
       for (const move of ordered) {
         if (now() >= deadline) throw expired;
         const next = movedBoard(state.board, move.from, move.to),
           side = other(state.turn);
-        const value = -negamax(next, side, depth - 1, -Infinity, -score, 1, [
+        const path = [
           ...state.positions,
           positionKey(next, side),
-        ]);
-        if (value > score) {
+        ];
+        let value = -negamax(next, side, depth - 1, -Infinity, -score, 1, path);
+        const repeats = state.positions.filter(key => key === positionKey(next, side)).length;
+        // A cutoff at the incumbent score is only an upper bound. Resolve it
+        // before treating it as an equal score for the repetition tie-break.
+        if (value === score && repeats < candidateRepeats)
+          value = -negamax(next, side, depth - 1, -Infinity, Infinity, 1, path);
+        // Exact equal scores prefer a less repeated position. A real draw still
+        // scores zero: do not avoid a necessary draw when otherwise losing.
+        if (value > score || (value === score && repeats < candidateRepeats)) {
           score = value;
           candidate = move;
+          candidateRepeats = repeats;
         }
       }
       best = candidate;

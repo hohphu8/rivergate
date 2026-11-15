@@ -143,6 +143,11 @@
               </div>
               <span class="player-side">{flipped() ? 'ĐEN' : 'ĐỎ'}</span>
             </div>
+            <div class="move-feedback">
+              <p data-testid="last-move" role="status" aria-live="polite">{lastMove()}</p>
+              <small>Vòng nét đứt: từ · Viền vuông: đến · Đỏ: quân nền sáng · Đen: quân nền tối</small>
+              <p class="repetition-note" g-show="repetitionNote()" role="status">{repetitionNote()}</p>
+            </div>
             <div class="board-tools">
               <button @click="flip()" :aria-pressed="flipped()">
                 <span aria-hidden="true">⇅</span> Xoay bàn</button
@@ -292,7 +297,7 @@
           <a href="https://gyosjs.dev" target="_blank" rel="noopener noreferrer"
             >GyosJS</a
           >
-          · 0.5.1</span
+          · {runtimeVersion}</span
         >
       </footer>
       <dialog id="dialog" aria-labelledby="dialog-title">
