@@ -1,6 +1,6 @@
 # Rivergate · Cờ tướng qua sông
 
-A standalone Vietnamese Xiangqi app built with **GyosJS 0.5.5**, plain HTML/CSS/JavaScript and Vite. Play Red against a basic bot, or play both sides with a friend on one device. No backend, accounts, telemetry or external runtime assets.
+A standalone Vietnamese Xiangqi app built with **GyosJS 0.5.6**, plain HTML/CSS/JavaScript and Vite. Play Red against a basic bot, or play both sides with a friend on one device. No backend, accounts, telemetry or external runtime assets.
 
 Use click/tap to select and move, or drag a piece with the mouse onto a highlighted legal point. Escape, dropping outside the board, or an invalid drop cancels the drag. Invalid destination clicks retain the selected piece and its legal hints. Touch retains tap/scroll behavior; arrow keys and Enter remain available.
 
@@ -81,3 +81,5 @@ The board uses stable piece IDs as `g-key`; moving a piece updates its position 
 See [dogfood findings](docs/DOGFOOD.md), [verification evidence](docs/VALIDATION.md) and [accepted scope](docs/PLAN.md). Source is maintained in [hohphu8/rivergate](https://github.com/hohphu8/rivergate); deployment is managed by the owner.
 
 See the [bundle follow-up](docs/PERFORMANCE.md) for measured CSP namespace-import savings; the published runtime pin and Worker behavior are unchanged.
+
+See the [0.5.6 runtime rollout](docs/RUNTIME-0.5.6.md) for validation of the subsequent npm upgrade.

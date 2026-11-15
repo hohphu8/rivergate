@@ -1,5 +1,7 @@
 # Bundle follow-up — 2026-11-15
 
+> Runtime rollout: the app now pins published GyosJS 0.5.6. The measurements below remain the original 0.5.5 import comparison, not measurements of the new package.
+
 Rivergate remains on **GyosJS 0.5.5** and the **CSP entry**. `src/main.js` now uses the existing namespace exports (`import * as Gyos from 'gyosjs/csp'`) so Vite can discard more unused API code. The development-only version probe reads the package's exported `package.json`; `version` is a default-object property, not a named runtime export. No rules, Worker protocol, dependency pin, CSP policy or persistence format changed.
 
 Production build, Node 22.18.0 / Vite 6.4.6, decimal kB:
